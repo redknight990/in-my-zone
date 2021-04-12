@@ -1,19 +1,19 @@
 {
-  "name": "in-my-zone",
-  "version": "1.0.0",
-  "description": "Music curating app to aid with productivity",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/IanjhPhillips/in-my-zone.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/IanjhPhillips/in-my-zone/issues"
-  },
-  "homepage": "https://github.com/IanjhPhillips/in-my-zone#readme"
+    "name": "in-my-zone-api",
+    "version": "0.1.0",
+    "main": "src/app.js",
+    "scripts": {
+        "start": "node ./src/app.js",
+        "start-local": "nodemon"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "colors": "^1.4.0",
+        "express": "^4.17.1",
+        "express-async-errors": "^3.1.1",
+        "ini": "^2.0.0",
+        "nodemon": "^2.0.7",
+        "tough-cookie": "^4.0.0",
+        "ytdl-core": "^4.5.0"
+    }
 }
