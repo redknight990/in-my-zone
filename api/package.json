@@ -1,0 +1,19 @@
+{
+  "name": "in-my-zone",
+  "version": "1.0.0",
+  "description": "Music curating app to aid with productivity",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IanjhPhillips/in-my-zone.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IanjhPhillips/in-my-zone/issues"
+  },
+  "homepage": "https://github.com/IanjhPhillips/in-my-zone#readme"
+}
