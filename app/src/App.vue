@@ -1,18 +1,18 @@
 <template>
     <v-app>
         <v-main>
-            <HelloWorld/>
+            <MusicPlayer/>
         </v-main>
     </v-app>
 </template>
 
 <script>
-    import HelloWorld from './components/MusicPlayer.vue';
+    import MusicPlayer from './components/MusicPlayer.vue';
 
     export default {
         name: 'App',
         components: {
-            HelloWorld,
+            MusicPlayer,
         }
     };
 </script>
