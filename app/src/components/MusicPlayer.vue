@@ -8,30 +8,29 @@
                 lazy-validation
             >
                 <v-row>
-                    <v-col>
-                        <v-input
+                    <v-col  cols="12">
+                        <v-text-field
                             v-model="keyword"
                             :rules="keywordRules"
-                            label="Keyword"
                             required
                             @change="validateKeyword"
-                        ></v-input>
+                        ></v-text-field>
                     </v-col>
                 </v-row>
-                        <v-btn
-                            :disabled="!valid"
-                            color="success"
-                            @click="submit"
-                        >
-                            <v-icon>
-                                mdi-magnify
-                            </v-icon>
-                        </v-btn>
+                <v-btn
+                    :disabled="!valid"
+                    color="secondary"
+                    @click="submit"
+                >
+                    <v-icon>
+                        mdi-magnify
+                    </v-icon>
+                </v-btn>
             </v-form>
-            <v-card-text>Now playing:</v-card-text>
+            <v-card-text>Now playing: {{track}}</v-card-text>
             <div>
                 <v-btn elevation="2"
-                       color="secondary"
+                       color="success"
                        @click="onTogglePlay">
                     <template v-if="playing">
                         <v-icon>mdi-pause</v-icon>
@@ -50,6 +49,7 @@ export default {
     name: 'MusicPlayer',
     data() {
         return {
+            track: "",
             playing: false,
             valid: false,
             keyword: '',

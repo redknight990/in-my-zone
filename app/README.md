@@ -1,4 +1,4 @@
-# in-my-zone
+# app
 
 ## Project setup
 ```
