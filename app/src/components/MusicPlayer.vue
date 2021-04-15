@@ -7,28 +7,38 @@
                 v-model="valid"
                 lazy-validation
             >
-                <v-row>
-                    <v-col  cols="12">
-                        <v-text-field
-                            v-model="keyword"
-                            :rules="keywordRules"
-                            required
-                            @change="validateKeyword"
-                        ></v-text-field>
-                    </v-col>
-                </v-row>
-                <v-btn
-                    :disabled="!valid"
-                    color="secondary"
-                    @click="submit"
-                >
-                    <v-icon>
-                        mdi-magnify
-                    </v-icon>
-                </v-btn>
+                <div class="mx-auto d-flex flex-row">
+                    <v-row>
+                        <v-col  cols="12">
+                            <v-text-field
+                                v-model="keyword"
+                                :rules="keywordRules"
+                                required
+                                @change="validateKeyword"
+                            ></v-text-field>
+                        </v-col>
+                    </v-row>
+                    <v-btn
+                        :disabled="!valid"
+                        color="secondary"
+                        @click="submit"
+                    >
+                        <v-icon>
+                            mdi-magnify
+                        </v-icon>
+                    </v-btn>
+                </div>
+
             </v-form>
             <v-card-text>Now playing: {{track}}</v-card-text>
             <div>
+                <v-btn elevation="2"
+                       color="success"
+                       @click="onPreviousTrack">
+                    <v-icon>
+                        mdi-skip-previous
+                    </v-icon>
+                </v-btn>
                 <v-btn elevation="2"
                        color="success"
                        @click="onTogglePlay">
@@ -38,6 +48,13 @@
                     <template v-else>
                         <v-icon>mdi-play</v-icon>
                     </template>
+                </v-btn>
+                <v-btn elevation="2"
+                       color="success"
+                       @click="onNextTrack">
+                    <v-icon>
+                        mdi-skip-next
+                    </v-icon>
                 </v-btn>
             </div>
         </v-card>
@@ -62,6 +79,12 @@ export default {
     methods: {
         onTogglePlay() {
             this.playing = !this.playing;
+            //dispatch event?
+        },
+        onNextTrack() {
+            //dispatch event?
+        },
+        onPreviousTrack() {
             //dispatch event?
         },
         validateKeyword() {
