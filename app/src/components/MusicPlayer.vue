@@ -1,7 +1,7 @@
 <template>
     <div class="player-modal" :style="artStyle">
         <div class="header">
-            <v-menu offset-y>
+            <v-menu offset-y v-if="isDesktop">
                 <template #activator="{ on, attrs }">
                     <div class="d-flex justify-center align-center" style="position: absolute; left: 0; top: 0; bottom: 0; z-index: 5">
                         <v-btn fab icon small v-bind="attrs" v-on="on">
