@@ -143,7 +143,10 @@ export default {
         },
         getCurrentPlaylist() {
             return Network.get(`/playlists/${this.currentPlaylist.id}`)
-                .then(res => this.currentPlaylist = res.data);
+                .then(res => {
+                    this.currentPlaylist = res.data;
+                    this.currentPlaylist.songs.sort(() => (Math.random() > .5) ? 1 : -1);
+                });
         },
         getCurrentSong() {
             return Network.get(`/songs/${this.song.id}`)
