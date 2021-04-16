@@ -35,7 +35,7 @@
                     let el = this.$refs.content;
                     if (!el)
                         return;
-                    this.overflow = el.offsetWidth !== el.scrollWidth;
+                    this.overflow = Math.abs(el.offsetWidth - el.scrollWidth) >= 2;
                 });
             }
         }

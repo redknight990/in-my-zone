@@ -1,7 +1,12 @@
 <template>
     <v-app>
         <v-main>
-            <MusicPlayer/>
+            <div class="w-100 h-100 d-flex flex-column justify-center">
+                <v-container fluid style="max-width: 400px;" v-if="!isMobileLayout">
+                    <MusicPlayer/>
+                </v-container>
+                <MusicPlayer v-else/>
+            </div>
         </v-main>
     </v-app>
 </template>
@@ -30,3 +35,7 @@
         }
     };
 </script>
+
+<style lang="scss">
+    @import "./assets/style/global.scss";
+</style>

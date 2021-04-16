@@ -16,6 +16,9 @@ Vue.mixin({
         isDesktop() {
             return this.device?.platform === 'web';
         },
+        isMobileLayout() {
+            return this.$store.state.isMobileLayout;
+        },
         device() {
             return this.$store.state.device;
         }

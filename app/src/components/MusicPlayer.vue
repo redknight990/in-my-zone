@@ -1,18 +1,30 @@
 <template>
-    <div class="w-100 h-100 player-modal" :style="artStyle">
+    <div class="player-modal" :style="artStyle">
         <div class="header">
+            <v-menu offset-y>
+                <template #activator="{ on, attrs }">
+                    <div class="d-flex justify-center align-center" style="position: absolute; left: 0; top: 0; bottom: 0; z-index: 5">
+                        <v-btn fab icon small v-bind="attrs" v-on="on">
+                            <v-icon>volume_up</v-icon>
+                        </v-btn>
+                    </div>
+                </template>
+                <v-card class="py-2 overflow-hidden">
+                    <v-slider v-model="volume" vertical :min="0" :max="1" :step="0.01" hide-details></v-slider>
+                </v-card>
+            </v-menu>
             <div class="title overflow-hidden">
-                <div v-if="currentPlaylist">
+                <div>
                     <div class="title-top text-ellipsis">PLAYING FROM PLAYLIST</div>
-                    <div class="title-bottom text-ellipsis">{{currentPlaylist.name}}</div>
+                    <div class="title-bottom text-ellipsis" v-if="currentPlaylist">{{currentPlaylist.name}}</div>
                 </div>
             </div>
         </div>
         <div class="song-container">
-            <v-text-field class="mt-2" v-model="keyword" dense placeholder="Enter a keyword (ex: study, relax)" @keydown.enter="fetchRecommendationsAndPlay(), $event.target.blur()">
+            <v-text-field v-model="keyword" dense placeholder="Enter a keyword (ex: study, relax)" @keydown.enter="fetchRecommendationsAndPlay(), $event.target.blur()">
                 <template #append>
                     <v-btn fab icon small @click.stop="fetchRecommendationsAndPlay">
-                        <v-icon>forward</v-icon>
+                        <v-icon>double_arrow</v-icon>
                     </v-btn>
                 </template>
             </v-text-field>
@@ -39,7 +51,10 @@
             </div>
         </div>
         <div class="controls">
-            <v-btn fab text small class="mr-5" @click.stop="playPrevious">
+            <v-btn fab text small @click.stop="playPreviousPlaylist" :disabled="loading">
+                <v-icon>fast_rewind</v-icon>
+            </v-btn>
+            <v-btn fab text small @click.stop="playPrevious" :disabled="loading">
                 <v-icon>skip_previous</v-icon>
             </v-btn>
             <v-btn fab :disabled="loading || !song" color="white" class="black--text" @click.stop="resume" v-if="loading || !playing">
@@ -49,8 +64,11 @@
             <v-btn fab color="white" class="black--text" @click.stop="pause" v-else>
                 <v-icon large>pause</v-icon>
             </v-btn>
-            <v-btn fab text small class="ml-5" @click.stop="playNext">
+            <v-btn fab text small @click.stop="playNext" :disabled="loading">
                 <v-icon>skip_next</v-icon>
+            </v-btn>
+            <v-btn fab text small @click.stop="playNextPlaylist" :disabled="loading">
+                <v-icon>fast_forward</v-icon>
             </v-btn>
         </div>
     </div>
@@ -125,11 +143,18 @@ export default {
             }
         }, 1000);
 
+        if (this.isDesktop) {
+            AudioPlugin.setVolume({
+                value: 0.1
+            });
+        }
+
         await this.fetchRecommendationsAndPlay(false);
     },
     methods: {
         async fetchRecommendationsAndPlay(force = true) {
             this.loading = true;
+            this.pause();
             this.trackNumber = -1;
             await this.getRecommendations();
             this.currentPlaylist = this.playlists.shift();
@@ -201,17 +226,16 @@ export default {
         async playNext(force = true) {
             if (this.song)
                 this.songHistory.unshift(this.song);
-            if (!this.currentPlaylist && this.playlists.length > 0) {
+            if (!this.currentPlaylist) {
                 this.currentPlaylist = this.playlists.shift();
-                await this.getCurrentPlaylist();
-            } else if (this.playlists.length === 0) {
-                return;
             }
+            if (!this.currentPlaylist.songs)
+                await this.getCurrentPlaylist();
             if (this.trackNumber + 1 < this.currentPlaylist.songs.length) {
                 this.trackNumber++;
             } else {
+                this.playlists.push(this.currentPlaylist);
                 this.currentPlaylist = this.playlists.shift();
-                await this.getCurrentPlaylist();
                 this.trackNumber = 0;
             }
             this.song = this.currentPlaylist.songs[this.trackNumber];
@@ -223,6 +247,24 @@ export default {
                 this.song = this.songHistory.shift();
                 this.play();
             }
+        },
+        playPreviousPlaylist() {
+            this.loading = true;
+            this.pause();
+            if (this.currentPlaylist)
+                this.playlists.unshift(this.currentPlaylist);
+            this.currentPlaylist = this.playlists.pop();
+            this.trackNumber = -1;
+            this.playNext();
+        },
+        playNextPlaylist() {
+            this.loading = true;
+            this.pause();
+            if (this.currentPlaylist)
+                this.playlists.push(this.currentPlaylist);
+            this.currentPlaylist = this.playlists.shift();
+            this.trackNumber = -1;
+            this.playNext();
         },
         seek(time) {
             this.time = time;
@@ -259,6 +301,18 @@ export default {
             else
                 return t.format('hh:mm:ss');
         },
+        volume: {
+            get() {
+                return AudioPlugin ? AudioPlugin.getVolume() : 0.1;
+            },
+            set(value) {
+                if (AudioPlugin) {
+                    AudioPlugin.setVolume({
+                        value
+                    });
+                }
+            }
+        },
     },
     watch: {
         song(value) {
@@ -286,6 +340,7 @@ export default {
         background-color: #1e1e1e;
 
         .header {
+            position: relative;
             display: flex;
             flex-direction: row;
             justify-content: space-between;
@@ -371,7 +426,7 @@ export default {
 
         .controls {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
         }
