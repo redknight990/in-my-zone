@@ -1,5 +1,6 @@
 const express = require('express');
 const ytdl = require('ytdl-core');
+const YoutubeMusicAPI = require('../../yt-music/YoutubeMusicAPI.js');
 
 const router = express();
 
@@ -44,6 +45,11 @@ router.get('/listen/:id', async (req, res) => {
     const stream = ytdl(url, opts);
 
     stream.pipe(res);
+});
+
+router.get('/:id', async (req, res) => {
+    const data = await YoutubeMusicAPI.getSongInfo(req.params.id);
+    res.json(data);
 });
 
 module.exports = router;

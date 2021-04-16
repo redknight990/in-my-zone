@@ -173,6 +173,8 @@ class YoutubeMusicAPI {
 
         }
 
+        playlist.trackCount = playlist.songs.length;
+
         return playlist;
     }
 

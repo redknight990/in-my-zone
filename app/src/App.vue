@@ -1,30 +1,32 @@
 <template>
-  <v-app>
-    <v-app-bar
-      app
-      color="primary"
-      dark
-    >
-    </v-app-bar>
-
-    <v-main>
-      <MusicPlayer/>
-    </v-main>
-  </v-app>
+    <v-app>
+        <v-main>
+            <MusicPlayer/>
+        </v-main>
+    </v-app>
 </template>
 
 <script>
-import MusicPlayer from './components/MusicPlayer';
+    import { Plugins } from '@capacitor/core';
+    import MusicPlayer from './components/MusicPlayer';
 
-export default {
-  name: 'App',
+    const { Device } = Plugins;
 
-  components: {
-    MusicPlayer,
-  },
+    export default {
+        name: 'App',
+        components: {
+            MusicPlayer,
+        },
+        async created() {
+            this.$store.commit('setDevice', await Device.getInfo());
+            this.$store.state.isMobileLayout = this.getLayoutWidth() <= 600;
+            this.$store.state.isSmallMobileLayout = this.getLayoutWidth() <= 360;
 
-  data: () => ({
-    //
-  }),
-};
+            window.addEventListener('resize', async () => {
+                this.$store.commit('setDevice', await Device.getInfo());
+                this.$store.state.isMobileLayout = this.getLayoutWidth() <= 600;
+                this.$store.state.isSmallMobileLayout = this.getLayoutWidth() <= 360;
+            });
+        }
+    };
 </script>

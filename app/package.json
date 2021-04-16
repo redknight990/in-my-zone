@@ -1,47 +1,60 @@
 {
-  "name": "app",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
-  },
-  "dependencies": {
-    "core-js": "^3.6.5",
-    "vue": "^2.6.11",
-    "vuetify": "^2.4.0"
-  },
-  "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-service": "~4.5.0",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^6.2.2",
-    "sass": "^1.32.0",
-    "sass-loader": "^10.0.0",
-    "vue-cli-plugin-vuetify": "~2.3.1",
-    "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.7.0"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
+    "name": "in-my-zone-app",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "serve": "vue-cli-service serve --mode local",
+        "build": "vue-cli-service build --mode local",
+        "build-live": "vue-cli-service build --mode live",
+        "lint": "vue-cli-service lint",
+        "android": "npm run build-local && npx cap sync android && npx cap copy android && npx cap open android",
+        "android-live": "npm run build-live && npx cap sync android && npx cap copy android && npx cap open android"
     },
-    "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended"
-    ],
-    "parserOptions": {
-      "parser": "babel-eslint"
+    "dependencies": {
+        "@capacitor-community/http": "^0.3.0",
+        "@capacitor/cli": "^2.4.7",
+        "@capacitor/core": "^2.4.7",
+        "axios": "^0.21.1",
+        "core-js": "^3.6.5",
+        "gradient-from-image": "0.0.7",
+        "moment": "^2.29.1",
+        "querystring": "^0.2.1",
+        "vue": "^2.6.11",
+        "vue-marquee-text-component": "^1.2.0",
+        "vuetify": "^2.4.0",
+        "vuex": "^3.6.2",
+        "vuex-persist": "^3.1.3"
     },
-    "rules": {}
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead"
-  ]
+    "devDependencies": {
+        "@vue/cli-plugin-babel": "~4.5.0",
+        "@vue/cli-plugin-eslint": "~4.5.0",
+        "@vue/cli-service": "~4.5.0",
+        "babel-eslint": "^10.1.0",
+        "eslint": "^6.7.2",
+        "eslint-plugin-vue": "^6.2.2",
+        "sass": "^1.32.0",
+        "sass-loader": "^10.0.0",
+        "vue-cli-plugin-vuetify": "~2.3.1",
+        "vue-template-compiler": "^2.6.11",
+        "vuetify-loader": "^1.7.0"
+    },
+    "eslintConfig": {
+        "root": true,
+        "env": {
+            "node": true
+        },
+        "extends": [
+            "plugin:vue/essential",
+            "eslint:recommended"
+        ],
+        "parserOptions": {
+            "parser": "babel-eslint"
+        },
+        "rules": {}
+    },
+    "browserslist": [
+        "> 1%",
+        "last 2 versions",
+        "not dead"
+    ]
 }

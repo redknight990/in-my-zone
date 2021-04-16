@@ -1,107 +1,385 @@
 <template>
-    <v-container class="text-main">
-        <v-card max-width="800" class="mx-auto d-flex flex-column">
-            <v-card-title>In My Zone</v-card-title>
-            <v-form
-                ref="musicForm"
-                v-model="valid"
-                lazy-validation
-            >
-                <div class="mx-auto d-flex flex-row">
-                    <v-row>
-                        <v-col  cols="12">
-                            <v-text-field
-                                v-model="keyword"
-                                :rules="keywordRules"
-                                required
-                                @change="validateKeyword"
-                            ></v-text-field>
-                        </v-col>
-                    </v-row>
-                    <v-btn
-                        :disabled="!valid"
-                        color="secondary"
-                        @click="submit"
-                    >
-                        <v-icon>
-                            mdi-magnify
-                        </v-icon>
-                    </v-btn>
+    <div class="w-100 h-100 player-modal" :style="artStyle">
+        <div class="header">
+            <div class="title overflow-hidden">
+                <div v-if="currentPlaylist">
+                    <div class="title-top text-ellipsis">PLAYING FROM PLAYLIST</div>
+                    <div class="title-bottom text-ellipsis">{{currentPlaylist.name}}</div>
                 </div>
-
-            </v-form>
-            <v-card-text>Now playing: {{track}}</v-card-text>
-            <div>
-                <v-btn elevation="2"
-                       color="success"
-                       @click="onPreviousTrack">
-                    <v-icon>
-                        mdi-skip-previous
-                    </v-icon>
-                </v-btn>
-                <v-btn elevation="2"
-                       color="success"
-                       @click="onTogglePlay">
-                    <template v-if="playing">
-                        <v-icon>mdi-pause</v-icon>
-                    </template>
-                    <template v-else>
-                        <v-icon>mdi-play</v-icon>
-                    </template>
-                </v-btn>
-                <v-btn elevation="2"
-                       color="success"
-                       @click="onNextTrack">
-                    <v-icon>
-                        mdi-skip-next
-                    </v-icon>
-                </v-btn>
             </div>
-        </v-card>
-    </v-container>
+        </div>
+        <div class="song-container">
+            <v-text-field class="mt-2" v-model="keyword" dense placeholder="Enter a keyword (ex: study, relax)" @keydown.enter="fetchRecommendationsAndPlay(), $event.target.blur()">
+                <template #append>
+                    <v-btn fab icon small @click.stop="fetchRecommendationsAndPlay">
+                        <v-icon>forward</v-icon>
+                    </v-btn>
+                </template>
+            </v-text-field>
+            <v-img :src="song | thumbnailHD" :lazy-src="song | thumbnail" :aspect-ratio="1" class="mx-auto elevation-3 rounded" style="background-color: black;" @load="loadGradient(thumbnailHD(song))" contain></v-img>
+            <div class="name-container">
+                <div class="name">
+                    <text-scroller ref="textScroller">
+                        <div class="track-name" v-if="song">{{ song.name }}</div>
+                    </text-scroller>
+                    <div class="artist-name text-ellipsis">{{ song | artist }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="seek">
+            <v-slider class="seek-slider"
+                      color="white"
+                      :value="seekWidth" :min="0" :max="100" :disabled="loading"
+                      @input="seekTime = $event"
+                      @start="seekBarIsMoving = true"
+                      @change="onSliderChange(seekTime * duration / 100000)"/>
+            <div class="slider-hints">
+                <span>{{ songTime }}</span>
+                <span>{{ songTotalTime }}</span>
+            </div>
+        </div>
+        <div class="controls">
+            <v-btn fab text small class="mr-5" @click.stop="playPrevious">
+                <v-icon>skip_previous</v-icon>
+            </v-btn>
+            <v-btn fab :disabled="loading || !song" color="white" class="black--text" @click.stop="resume" v-if="loading || !playing">
+                <v-icon large>play_arrow</v-icon>
+                <v-progress-circular v-if="loading" style="position: absolute; opacity: 0.8;" color="white" :size="60" indeterminate></v-progress-circular>
+            </v-btn>
+            <v-btn fab color="white" class="black--text" @click.stop="pause" v-else>
+                <v-icon large>pause</v-icon>
+            </v-btn>
+            <v-btn fab text small class="ml-5" @click.stop="playNext">
+                <v-icon>skip_next</v-icon>
+            </v-btn>
+        </div>
+    </div>
 </template>
 
 <script>
+import moment from 'moment';
+import gradient from '../mixins/gradient.js';
+import Network from '../helpers/Network.js';
+import { getVideoFormat } from '../helpers/YoutubePlugin.js';
+import AudioPluginWeb from '../helpers/AudioPlugin.js';
+
+import { Plugins } from '@capacitor/core';
+import { artist, thumbnailHD } from '../filters.js';
+import TextScroller from './TextScroller.vue';
+
+const { AudioPlugin: AudioPluginNative } = Plugins;
+
+let AudioPlugin;
+
 export default {
     name: 'MusicPlayer',
+    components: { TextScroller },
     data() {
         return {
-            track: "",
+            loading: false,
             playing: false,
-            valid: false,
+            song: null,
+
+            playlists: [],
+            currentPlaylist: null,
+            songHistory: [],
+            trackNumber: -1,
+
+            seekTime: 0,
+            seekBarIsMoving: false,
+            apiUrl: null,
+            time: 0,
+            duration: 0,
+
             keyword: '',
             keywordRules: [
-                v => !!v || 'Keyword is required',
-                v => typeof v == "string" || 'Keyword should be string'
-            ]
+                v => !!v || 'Keyword is required'
+            ],
+
+            thumbnailHD
         }
     },
-    methods: {
-        onTogglePlay() {
-            this.playing = !this.playing;
-            //dispatch event?
-        },
-        onNextTrack() {
-            //dispatch event?
-        },
-        onPreviousTrack() {
-            //dispatch event?
-        },
-        validateKeyword() {
-            this.$refs.musicForm.validate();
-        },
-        submit() {
-            //dispatch event
+    async created() {
+        this.apiUrl = process.env.VUE_APP_API_URL;
+        AudioPlugin = this.isDesktop ? AudioPluginWeb : AudioPluginNative;
+
+        // Audio plugin listeners
+        AudioPlugin.addListener('onLoad', () => this.loading = true);
+        AudioPlugin.addListener('onReady', ({ duration }) => {
+            this.loading = false;
+            this.duration = duration;
+        });
+        AudioPlugin.addListener('onComplete', () => this.playNext());
+        AudioPlugin.addListener('onPlay', () => this.resume());
+        AudioPlugin.addListener('onPause', () => this.pause());
+
+        if (!this.isDesktop) {
+            AudioPlugin.addListener('onSkipNext', () => this.playNext());
+            AudioPlugin.addListener('onSkipPrev', () => this.playPrevious());
         }
-    }
+
+        setInterval(async () => {
+            if (!this.seekBarIsMoving && this.playing) {
+                this.time = (await AudioPlugin.getCurrentTime()).time;
+                this.$forceUpdate();
+            }
+        }, 1000);
+
+        await this.fetchRecommendationsAndPlay(false);
+    },
+    methods: {
+        async fetchRecommendationsAndPlay(force = true) {
+            this.loading = true;
+            this.trackNumber = -1;
+            await this.getRecommendations();
+            this.currentPlaylist = this.playlists.shift();
+            await this.getCurrentPlaylist();
+            await this.playNext(force);
+            this.loading = false;
+        },
+        getRecommendations() {
+            return Network.get(`/recommend/${this.keyword || 'study'}`)
+                .then(res => this.playlists = res.data);
+        },
+        getCurrentPlaylist() {
+            return Network.get(`/playlists/${this.currentPlaylist.id}`)
+                .then(res => this.currentPlaylist = res.data);
+        },
+        getCurrentSong() {
+            return Network.get(`/songs/${this.song.id}`)
+                .then(res => this.song = res.data);
+        },
+        async init() {
+            if (!this.song)
+                return;
+
+            this.loading = true;
+            this.playing = false;
+            await this.pause();
+
+            let url;
+
+            if (this.isDesktop) {
+                url = `${this.apiUrl}/songs/listen/${this.song.id}`;
+            } else {
+                const format = await getVideoFormat(this.song.id);
+                url = format.url;
+            }
+
+            if (url) {
+                await AudioPlugin.prepare({
+                    uri: url,
+                    title: this.song.name,
+                    artist: artist(this.song),
+                    image_url: thumbnailHD(this.song)
+                });
+
+                this.loading = false;
+
+                this.time = 0;
+                document.title = `${this.song.name} • ${artist(this.song)}`;
+            }
+        },
+        async play(force = true) {
+            await this.init();
+            if (force) {
+                await AudioPlugin.play();
+                this.playing = true;
+            }
+        },
+        resume() {
+            AudioPlugin.play();
+            this.playing = true;
+        },
+        pause() {
+            AudioPlugin.pause();
+            this.playing = false;
+        },
+        async playNext(force = true) {
+            if (this.song)
+                this.songHistory.unshift(this.song);
+            if (!this.currentPlaylist && this.playlists.length > 0) {
+                this.currentPlaylist = this.playlists.shift();
+                await this.getCurrentPlaylist();
+            } else if (this.playlists.length === 0) {
+                return;
+            }
+            if (this.trackNumber + 1 < this.currentPlaylist.songs.length) {
+                this.trackNumber++;
+            } else {
+                this.currentPlaylist = this.playlists.shift();
+                await this.getCurrentPlaylist();
+                this.trackNumber = 0;
+            }
+            this.song = this.currentPlaylist.songs[this.trackNumber];
+            this.getCurrentSong();
+            await this.play(force);
+        },
+        playPrevious() {
+            if (this.songHistory.length > 0) {
+                this.song = this.songHistory.shift();
+                this.play();
+            }
+        },
+        seek(time) {
+            this.time = time;
+            AudioPlugin.seek({ to: time });
+        },
+        onSliderChange(time) {
+            this.seekBarIsMoving = false;
+            this.seek(time);
+        }
+    },
+    computed: {
+        seekWidth() {
+            return this.time * 100000 / this.duration;
+        },
+        songTime() {
+            if (this.seekBarIsMoving) {
+                let t = moment().startOf('day').seconds(this.seekTime * this.duration / 100000);
+                if (t.hour() === 0)
+                    return t.format('m:ss');
+                else
+                    return t.format('hh:mm:ss');
+            }
+
+            let t = moment().startOf('day').seconds(this.time);
+            if (t.hour() === 0)
+                return t.format('m:ss');
+            else
+                return t.format('hh:mm:ss');
+        },
+        songTotalTime() {
+            const t = moment().startOf('day').seconds(this.duration / 1000 || 0);
+            if (t.hour() === 0)
+                return t.format('m:ss');
+            else
+                return t.format('hh:mm:ss');
+        },
+    },
+    watch: {
+        song(value) {
+            if (value) {
+                this.$nextTick(() => {
+                    if (this.$refs.textScroller)
+                        this.$refs.textScroller.update();
+                });
+            }
+        }
+    },
+    mixins: [gradient]
 }
 </script>
 
 
 <style lang="scss" scoped>
-.text-main {
-    color: rgb(var(--v-theme-secondary));
-    font-weight: bold;
-    text-align: center;
-}
+    .player-modal {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 1.75em;
+        background-color: #1e1e1e;
+
+        .header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5em -1em 0 -1em;
+            padding: 0.8em 0 0.5em 0;
+
+            .title {
+                flex: 1;
+                font-size: 9pt !important;
+                line-height: 18px;
+                text-align: center;
+
+                .title-top {
+                    font-weight: 100;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    opacity: 0.9;
+                }
+
+                .title-bottom {
+                    font-weight: 500;
+                    letter-spacing: 0.5px;
+                }
+            }
+        }
+
+        .song-container {
+            flex: 5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+
+            .v-image {
+                width: calc(100vw - 2 * 1.75em);
+                max-height: calc(100vw - 2 * 1.75em);
+            }
+
+            .name-container {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
+
+                .name {
+                    flex: 1;
+                    font-size: 11pt;
+                    line-height: 24px;
+                    padding: 1em 0.25em;
+                    overflow-x: hidden;
+
+                    .track-name {
+                        font-size: 13pt;
+                        letter-spacing: 1px;
+                    }
+
+                    .artist-name {
+                        font-weight: 100;
+                        letter-spacing: 0.5px;
+                        opacity: 0.7;
+                    }
+                }
+
+                .favorite {
+                    font-size: 20pt;
+                    color: rgba(255, 255, 255, 0.5);
+                    padding-top: 0.7em;
+                }
+            }
+
+        }
+
+        .seek .slider-hints {
+            font-size: 9pt;
+            line-height: 10px;
+            position: relative;
+            top: -20px;
+            display: flex;
+            justify-content: space-between;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .queue {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+    }
 </style>
