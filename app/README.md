@@ -1,4 +1,4 @@
-# in-my-zone
+# In My Zone
 
 ## Project setup
 ```
