@@ -21,7 +21,7 @@
             </div>
         </div>
         <div class="song-container">
-            <v-text-field v-model="keyword" dense placeholder="Enter a keyword (ex: study, relax)" @keydown.enter="fetchRecommendationsAndPlay(), $event.target.blur()">
+            <v-text-field v-model="keyword" class="flex-0" dense placeholder="Enter a keyword (ex: study, relax)" @keydown.enter="fetchRecommendationsAndPlay(), $event.target.blur()">
                 <template #append>
                     <v-btn fab icon small @click.stop="fetchRecommendationsAndPlay">
                         <v-icon>search</v-icon>
@@ -201,11 +201,8 @@ export default {
                     artist: artist(this.song),
                     image_url: thumbnailHD(this.song)
                 });
-
                 this.loading = false;
-
                 this.time = 0;
-                console.log(this.song);
                 document.title = `${this.song.name} • ${artist(this.song)}`;
             }
         },
