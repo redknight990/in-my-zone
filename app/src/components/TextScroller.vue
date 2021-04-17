@@ -12,8 +12,10 @@
 </template>
 
 <script>
+    import MarqueeText from 'vue-marquee-text-component';
     export default {
         name: 'TextScroller',
+        components: { MarqueeText },
         props: {
             duration: {
                 type: Number,
