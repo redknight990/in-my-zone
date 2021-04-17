@@ -24,7 +24,7 @@
             <v-text-field v-model="keyword" dense placeholder="Enter a keyword (ex: study, relax)" @keydown.enter="fetchRecommendationsAndPlay(), $event.target.blur()">
                 <template #append>
                     <v-btn fab icon small @click.stop="fetchRecommendationsAndPlay">
-                        <v-icon>double_arrow</v-icon>
+                        <v-icon>search</v-icon>
                     </v-btn>
                 </template>
             </v-text-field>
@@ -175,7 +175,7 @@ export default {
         },
         getCurrentSong() {
             return Network.get(`/songs/${this.song.id}`)
-                .then(res => this.song = res.data);
+                .then(res => Object.assign(this.song, res.data));
         },
         async init() {
             if (!this.song)
@@ -205,6 +205,7 @@ export default {
                 this.loading = false;
 
                 this.time = 0;
+                console.log(this.song);
                 document.title = `${this.song.name} • ${artist(this.song)}`;
             }
         },
@@ -316,18 +317,17 @@ export default {
     },
     watch: {
         song(value) {
-            if (value) {
-                this.$nextTick(() => {
-                    if (this.$refs.textScroller)
-                        this.$refs.textScroller.update();
-                });
-            }
+              if (value) {
+                    this.$nextTick(() => {
+                        if (this.$refs.textScroller)
+                            this.$refs.textScroller.update();
+                    });
+                }
         }
     },
     mixins: [gradient]
 }
 </script>
-
 
 <style lang="scss" scoped>
     .player-modal {
