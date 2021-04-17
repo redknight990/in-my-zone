@@ -7,7 +7,6 @@ const path = require('path');
 const logger = require('./helpers/logger.js');
 const errorHandler = require('./helpers/error.js');
 
-const indexRoutes = require('./routes/index.js');
 const corsRoutes = require('./routes/cors.js');
 const recommendRoutes = require('./routes/recommend.js');
 const songsRoutes = require('./routes/songs.js');
@@ -29,7 +28,6 @@ if (env.isLocal()) {
 }
 
 // Use routes
-app.use('/', indexRoutes);
 app.use('/cors', corsRoutes);
 app.use('/recommend', recommendRoutes);
 app.use('/songs', songsRoutes);

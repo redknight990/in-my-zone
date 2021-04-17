@@ -3,6 +3,6 @@
     "version": "1.0.0",
     "scripts": {
         "start": "cd api && npm start",
-        "build": "cd api && npm install && cd ../app && npm install && npm run build"
+        "build": "cd api && npm install && cd ../app && npm install && npm run build-live"
     }
 }
