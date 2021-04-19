@@ -19,6 +19,18 @@
                     <div class="title-bottom text-ellipsis" v-if="currentPlaylist">{{currentPlaylist.name}}</div>
                 </div>
             </div>
+            <v-menu offset-y>
+                <template #activator="{ on, attrs }">
+                    <div class="d-flex justify-center align-center" style="position: absolute; right: 0; top: 0; bottom: 0; z-index: 5">
+                        <v-btn fab icon small v-bind="attrs" v-on="on">
+                            <v-icon>timer</v-icon>
+                        </v-btn>
+                    </div>
+                </template>
+                <v-card class="py-2 overflow-hidden">
+                    <v-time-picker v-model="timer" format="24hr" scrollable @input="onTimeOut"></v-time-picker>
+                </v-card>
+            </v-menu>
         </div>
         <div class="song-container">
             <v-text-field v-model="keyword" class="flex-0" dense placeholder="Enter a keyword (ex: study, relax)" @keydown.enter="fetchRecommendationsAndPlay(), $event.target.blur()">
@@ -107,6 +119,8 @@ export default {
             seekBarIsMoving: false,
             apiUrl: null,
             time: 0,
+            timeout: null,
+            timer: null,
             duration: 0,
 
             keyword: '',
@@ -271,6 +285,19 @@ export default {
         onSliderChange(time) {
             this.seekBarIsMoving = false;
             this.seek(time);
+        },
+        onTimeOut(newValue) {
+            let momentObject = moment(newValue, "HH:mm");
+            let diff = momentObject.diff(moment(), "milliseconds");
+            if (diff < 0) {
+                momentObject = momentObject.add(1, "days");
+            }
+            diff = momentObject.diff(moment(), "milliseconds");
+            if (this.timeout) clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.pause();
+                this.timer = null;
+            }, diff);
         }
     },
     computed: {
@@ -310,7 +337,7 @@ export default {
                     });
                 }
             }
-        },
+        }
     },
     watch: {
         song(value) {
