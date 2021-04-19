@@ -2,10 +2,9 @@
     <v-app>
         <v-main>
             <div class="w-100 h-100 d-flex flex-column justify-center">
-                <v-container fluid style="max-width: 400px;" v-if="!isMobileLayout">
+                <v-container fluid :style="containerStyle">
                     <MusicPlayer/>
                 </v-container>
-                <MusicPlayer v-else/>
             </div>
         </v-main>
     </v-app>
@@ -32,6 +31,13 @@
                 this.$store.state.isMobileLayout = this.getLayoutWidth() <= 600;
                 this.$store.state.isSmallMobileLayout = this.getLayoutWidth() <= 360;
             });
+        },
+        computed: {
+            containerStyle() {
+                if (this.isMobileLayout)
+                    return `padding: 0; height: 100%;`;
+                return `max-width: 400px;`
+            }
         }
     };
 </script>
