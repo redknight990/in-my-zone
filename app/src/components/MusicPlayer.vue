@@ -19,7 +19,7 @@
                     <div class="title-bottom text-ellipsis" v-if="currentPlaylist">{{currentPlaylist.name}}</div>
                 </div>
             </div>
-            <v-menu offset-y>
+            <v-menu offset-y :close-on-content-click="false">
                 <template #activator="{ on, attrs }">
                     <div class="d-flex justify-center align-center" style="position: absolute; right: 0; top: 0; bottom: 0; z-index: 5">
                         <v-btn fab icon small v-bind="attrs" v-on="on">
