@@ -5,7 +5,8 @@
                 <template #activator="{ on, attrs }">
                     <div class="d-flex justify-center align-center" style="position: absolute; left: 0; top: 0; bottom: 0; z-index: 5">
                         <v-btn fab icon small v-bind="attrs" v-on="on">
-                            <v-icon>volume_up</v-icon>
+                            <v-icon v-if="volumeValue > 0">volume_up</v-icon>
+                            <v-icon v-else>volume_off</v-icon>
                         </v-btn>
                     </div>
                 </template>
@@ -23,13 +24,16 @@
                 <template #activator="{ on, attrs }">
                     <div class="d-flex justify-center align-center" style="position: absolute; right: 0; top: 0; bottom: 0; z-index: 5">
                         <v-btn fab icon small v-bind="attrs" v-on="on">
-                            <v-icon>timer</v-icon>
+                            <v-icon v-if="timer">timer</v-icon>
+                            <v-icon v-else>timer_off</v-icon>
                         </v-btn>
                     </div>
                 </template>
-                <v-card class="py-2 overflow-hidden">
-                    <v-time-picker v-model="timer" format="24hr" scrollable @input="onTimeOut"></v-time-picker>
-                </v-card>
+                <v-card class="py-2 overflow-hidden" style="width: 290px">
+                    <h2 class="mt-1 text-center font-weight-regular" style="opacity: 0.8;">Sleep Time</h2>
+                    <v-time-picker v-model="timer" scrollable @input="onTimeOut"></v-time-picker>
+                    <v-btn class="mt-2 ml-2" text color="warning" @click="timer = null">Clear</v-btn>
+                </v-card>l
             </v-menu>
         </div>
         <div class="song-container">
@@ -122,6 +126,7 @@ export default {
             timeout: null,
             timer: null,
             duration: 0,
+            volumeValue: 0,
 
             keyword: '',
             keywordRules: [
@@ -158,9 +163,7 @@ export default {
         }, 1000);
 
         if (this.isDesktop) {
-            AudioPlugin.setVolume({
-                value: 0.1
-            });
+            this.volume = 0.1;
         }
 
         await this.fetchRecommendationsAndPlay(false);
@@ -217,7 +220,7 @@ export default {
                 });
                 this.loading = false;
                 this.time = 0;
-                document.title = `${this.song.name} • ${artist(this.song)}`;
+                document.title = `IMZ • ${this.song.name} • ${artist(this.song)}`;
             }
         },
         async play(force = true) {
@@ -332,6 +335,7 @@ export default {
             },
             set(value) {
                 if (AudioPlugin) {
+                    this.volumeValue = value;
                     AudioPlugin.setVolume({
                         value
                     });
@@ -347,6 +351,10 @@ export default {
                             this.$refs.textScroller.update();
                     });
                 }
+        },
+        isDesktop(value) {
+            AudioPlugin = value ? AudioPluginWeb : AudioPluginNative;
+            AudioPlugin.pause();
         }
     },
     mixins: [gradient]
@@ -463,5 +471,12 @@ export default {
             align-items: center;
         }
 
+    }
+</style>
+
+
+<style lang="scss">
+    .v-picker__title__btn {
+        color: white !important;
     }
 </style>
