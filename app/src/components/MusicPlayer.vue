@@ -28,6 +28,7 @@
                     </div>
                 </template>
                 <v-card class="py-2 overflow-hidden">
+                    <h3 class="text-center">Sleep Time</h3>
                     <v-time-picker v-model="timer" format="24hr" scrollable @input="onTimeOut"></v-time-picker>
                 </v-card>
             </v-menu>
