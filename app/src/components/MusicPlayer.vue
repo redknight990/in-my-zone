@@ -32,7 +32,7 @@
                 <v-card class="py-2 overflow-hidden" style="width: 290px">
                     <h2 class="mt-1 text-center font-weight-regular" style="opacity: 0.8;">Sleep Time</h2>
                     <v-time-picker v-model="timer" scrollable @input="onTimeOut"></v-time-picker>
-                    <v-btn class="mt-2 ml-2" text color="warning" @click="timer = null">Clear</v-btn>
+                    <v-btn class="mt-2 ml-2" text color="warning" @click="clearTimer">Clear</v-btn>
                 </v-card>l
             </v-menu>
         </div>
@@ -170,6 +170,10 @@ export default {
         await this.fetchRecommendationsAndPlay(false);
     },
     methods: {
+        clearTimer() {
+            this.timer = null;
+            clearTimeout(this.timeout);
+        },
         async fetchRecommendationsAndPlay(force = true) {
             this.loading = true;
             this.pause();
