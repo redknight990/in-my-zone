@@ -101,7 +101,7 @@ import { Plugins } from '@capacitor/core';
 import { artist, thumbnailHD } from '../filters.js';
 import TextScroller from './TextScroller.vue';
 
-const { AudioPlugin: AudioPluginNative } = Plugins;
+const { AudioPlugin: AudioPluginNative, Device } = Plugins;
 
 let AudioPlugin;
 
@@ -137,6 +137,7 @@ export default {
         }
     },
     async created() {
+        this.$store.commit('setDevice', await Device.getInfo());
         this.apiUrl = process.env.VUE_APP_API_URL;
         AudioPlugin = this.isDesktop ? AudioPluginWeb : AudioPluginNative;
 
@@ -351,10 +352,6 @@ export default {
                             this.$refs.textScroller.update();
                     });
                 }
-        },
-        isDesktop(value) {
-            AudioPlugin = value ? AudioPluginWeb : AudioPluginNative;
-            AudioPlugin.pause();
         }
     },
     mixins: [gradient]
